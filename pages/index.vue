@@ -5,6 +5,16 @@ import { formatKoreanCurrency } from "~/utils/money";
 import type { TableColumn, DropdownMenuItem } from "@nuxt/ui";
 import bitcoinPrices from "/public/db/bitcoin-prices.json";
 
+useHead({
+    title: "비트코인 살껄",
+    link: [
+        {
+            rel: "icon",
+            type: "image/x-icon",
+            href: "/favicon.ico",
+        },
+    ],
+});
 useSeoMeta({
     ogTitle: "10년전에 비트코인 샀다면?",
     ogDescription: "라고 할때 살껄!!",
