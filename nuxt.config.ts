@@ -5,10 +5,10 @@ export default defineNuxtConfig({
     runtimeConfig: {
         public: {
             version: packageJson.version,
+            siteUrl: "https://boodari.github.io", // 기본 URL 설정
         },
     },
     devtools: { enabled: false },
     css: ["~/assets/css/main.css"],
-    ssr: false,
     modules: ["@nuxt/ui"],
 });
