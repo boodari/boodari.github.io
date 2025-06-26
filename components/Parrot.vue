@@ -1,24 +1,20 @@
 <template>
-	<div
-		class="wrapper"
-	>
-		<h1
-			class="text-4xl font-bold text-center"
-		>
-			{{ props.message }}
-		</h1>
-		<img
-			src="~/assets/images/parrot.png"
-			class="mx-auto"
-			alt=""
-			srcset=""
-		>
-	</div>
+    <div class="wrapper">
+        <h1 class="text-4xl font-bold text-center">
+            {{ props.message }}
+        </h1>
+        <img
+            src="~/assets/images/parrot.png"
+            class="mx-auto"
+            alt=""
+            srcset=""
+        />
+    </div>
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
-	message?: string;
+    message?: string;
 }>();
 </script>
 
@@ -30,7 +26,7 @@ const props = defineProps<{
     height: 433px;
     margin: 150px auto 30px;
 }
- h1 {
+h1 {
     position: absolute;
     left: 10px;
     top: -94px;
@@ -45,15 +41,21 @@ const props = defineProps<{
     border-width: 10px;
     border-color: #000;
     border-style: dotted;
- }
- @media screen and (max-width: 577px) {
+    color: #000;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease,
+        border-color 0.3s ease;
+}
+
+@media screen and (max-width: 577px) {
     .wrapper {
         transform: scale(0.7) translateX(-10%);
         margin: 55px auto 0px;
     }
- }
- img {
+}
+img {
     position: relative;
     width: 100%;
- }
+}
 </style>
