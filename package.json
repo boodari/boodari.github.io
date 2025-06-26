@@ -1,17 +1,19 @@
 {
-  "name": "nuxt-app",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
-  },
-  "dependencies": {
-    "nuxt": "^3.17.5",
-    "vue": "^3.5.17",
-    "vue-router": "^4.5.1"
-  }
+    "name": "boodari.github.io",
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "build": "nuxt build",
+        "dev": "nuxt dev",
+        "generate": "nuxt generate",
+        "preview": "nuxt preview",
+        "postinstall": "nuxt prepare",
+        "deploy": "nuxt generate && echo '' > .output/public/.nojekyll && gh-pages -d .output/public --dotfiles"
+    },
+    "dependencies": {
+        "@nuxt/ui": "^3.2.0",
+        "nuxt": "^3.17.5",
+        "vue": "^3.5.17",
+        "vue-router": "^4.5.1"
+    }
 }
