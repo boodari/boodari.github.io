@@ -12,5 +12,5 @@ export const formatKoreanCurrency = (amount: number) => {
         }
     }
 
-    return result.trim() || "0원";
+    return result.trim() || "0";
 };
