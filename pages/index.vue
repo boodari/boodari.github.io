@@ -51,9 +51,22 @@ const timeDifference = computed(() =>
     calculateTimeDifference(bitcoinPrices[fromDateReverseStep.value].date),
 );
 const input = ref(0);
+
+// 현재 채굴된 비트코인 총량 (2024년 기준 약 1,970만 BTC)
+const MAX_BITCOIN_SUPPLY = 19700000;
+
 const rows = computed(() => {
     return bitcoinPrices
         .map((price: any) => {
+            // 가격이 0인 경우는 거래 불가능으로 간주하여 0 반환
+            if (price.krw === 0) {
+                return {
+                    date: price.date,
+                    krw: price.krw,
+                    dca: input.value,
+                    btc: 0,
+                };
+            }
             // 소수점 8자리까지 표시
             const btc = (input.value / price.krw).toFixed(8);
             return {
@@ -151,12 +164,18 @@ const columns: TableColumn[] = [
     },
 ];
 const totalBtc = computed(() => {
-    return rows.value
-        .reduce((acc: any, row: any) => acc + Number(row.btc), 0)
-        .toFixed(8);
+    const total = rows.value
+        .reduce((acc: any, row: any) => acc + Number(row.btc), 0);
+    
+    // 현재 채굴된 비트코인 총량을 초과할 수 없음
+    return Math.min(total, MAX_BITCOIN_SUPPLY).toFixed(8);
 });
 const nowBitcoinPrice = ref(bitcoinPrices[bitcoinPrices.length - 1].krw);
-const totalInvestment = computed(() => input.value * rows.value.length);
+
+// 실제 투자 가능한 개월 수 (가격이 0이 아닌 월만 카운트)
+const validMonths = computed(() => rows.value.filter(row => row.krw > 0).length);
+const totalInvestment = computed(() => input.value * validMonths.value);
+
 const currentValue = computed(() => totalBtc.value * nowBitcoinPrice.value);
 const profit = computed(() => currentValue.value - totalInvestment.value);
 const profitRate = computed(() => totalInvestment.value > 0 ? ((profit.value / totalInvestment.value) * 100).toFixed(2) : 0);
@@ -249,7 +268,10 @@ onMounted(async () => {
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                         <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">투자 기간</div>
-                        <div class="text-2xl font-bold">{{ rows.length }}개월</div>
+                        <div class="text-2xl font-bold">{{ validMonths }}개월</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            (전체 {{ rows.length }}개월 중)
+                        </div>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                         <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">총 투자금</div>
@@ -290,10 +312,13 @@ onMounted(async () => {
     <!-- 테이블 -->
     <div v-if="input > 0" class="mb-8">
         <h3 class="text-lg font-semibold mb-4">📊 월별 투자 내역</h3>
+        <div v-if="rows.filter(row => row.krw === 0).length > 0" class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            💡 거래소가 없던 {{ rows.filter(row => row.krw === 0).length }}개월은 투자 불가능으로 제외됩니다
+        </div>
         <UTable
             v-model:sorting="sorting"
             :columns="columns"
-            :data="rows"
+            :data="rows.filter(row => row.krw > 0)"
             class="rounded-lg overflow-hidden"
         />
     </div>
