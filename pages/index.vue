@@ -97,7 +97,7 @@ const columns: TableColumn[] = [
             return h(UButton, {
                 color: "neutral",
                 variant: "ghost",
-                label: "비트코인 1개 가격(KRW)",
+                label: "BTC 가격",
                 icon: isSorted
                     ? isSorted === "asc"
                         ? "i-lucide-arrow-up-narrow-wide"
@@ -108,7 +108,25 @@ const columns: TableColumn[] = [
                     column.toggleSorting(column.getIsSorted() === "asc"),
             });
         },
-        cell: ({ row }) => `￦${row.getValue("krw").toLocaleString()}`,
+        cell: ({ row }) => {
+            const value = row.getValue("krw");
+            const formatted = value.toLocaleString();
+            // 억 단위 표시
+            if (value >= 100000000) {
+                const eok = Math.floor(value / 100000000);
+                const man = Math.floor((value % 100000000) / 10000);
+                return man > 0 ? `${eok}억 ${man}만원` : `${eok}억원`;
+            } else if (value >= 10000) {
+                const man = Math.floor(value / 10000);
+                return `${man}만원`;
+            }
+            return `${formatted}원`;
+        },
+    },
+    {
+        accessorKey: "dca",
+        header: "매달 투자",
+        cell: ({ row }) => `${(row.getValue("dca") / 10000).toLocaleString()}만원`,
     },
     {
         accessorKey: "btc",
@@ -118,7 +136,7 @@ const columns: TableColumn[] = [
             return h(UButton, {
                 color: "neutral",
                 variant: "ghost",
-                label: "수량(BTC)",
+                label: "구매량",
                 icon: isSorted
                     ? isSorted === "asc"
                         ? "i-lucide-arrow-up-narrow-wide"
@@ -129,12 +147,7 @@ const columns: TableColumn[] = [
                     column.toggleSorting(column.getIsSorted() === "asc"),
             });
         },
-        cell: ({ row }) => `₿${row.getValue("btc").toLocaleString()}`,
-    },
-    {
-        accessorKey: "dca",
-        header: "투자금액",
-        cell: ({ row }) => `￦${row.getValue("dca").toLocaleString()}`,
+        cell: ({ row }) => `${parseFloat(row.getValue("btc")).toFixed(6)} BTC`,
     },
 ];
 const totalBtc = computed(() => {
@@ -143,6 +156,10 @@ const totalBtc = computed(() => {
         .toFixed(8);
 });
 const nowBitcoinPrice = ref(bitcoinPrices[bitcoinPrices.length - 1].krw);
+const totalInvestment = computed(() => input.value * rows.value.length);
+const currentValue = computed(() => totalBtc.value * nowBitcoinPrice.value);
+const profit = computed(() => currentValue.value - totalInvestment.value);
+const profitRate = computed(() => totalInvestment.value > 0 ? ((profit.value / totalInvestment.value) * 100).toFixed(2) : 0);
 
 const sorting = ref([
     {
@@ -168,10 +185,11 @@ onMounted(async () => {
 
 <template>
     <Parrot :message="`${timeDifference}전에 살껄!!`" />
+    
     <UFormField
-        label="이 때 부터 살껄"
-        class="mb-5"
-        :hint="`${timeDifference} 전(${bitcoinPrices[fromDateReverseStep].date}) 부터 살껄`"
+        label="📅 언제부터 투자할껄?"
+        class="mb-8"
+        :hint="`${timeDifference} 전 (${bitcoinPrices[fromDateReverseStep].date.slice(0, 7)})`"
     >
         <USlider
             v-model="fromDateStep"
@@ -182,11 +200,10 @@ onMounted(async () => {
     </UFormField>
 
     <UFormField
-        label="매달 얼마씩 살껄"
-        :help="`${rows.length}개월간 매달 ${formatKoreanCurrency(input)}원씩 샀다면 총 ${formatKoreanCurrency(input * rows.length)}`"
-        class="mb-5"
+        label="💰 매달 얼마씩 투자할껄?"
+        class="mb-8"
     >
-        <UButtonGroup orientation="horizontal" class="mb-3">
+        <UButtonGroup orientation="horizontal" class="mb-3 flex-wrap gap-2">
             <UButton
                 color="neutral"
                 variant="outline"
@@ -213,27 +230,75 @@ onMounted(async () => {
             />
         </UButtonGroup>
         <br />
-        <UInput v-model="input" type="number">
+        <UInput v-model="input" type="number" size="xl" placeholder="금액을 입력하세요">
             <template #trailing>
-                <span class="text-xs text-gray-500 dark:text-gray-400">￦</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">원</span>
             </template>
         </UInput>
     </UFormField>
-    <div
-        v-if="input > 0"
-        class="text-sm text-gray-500 dark:text-gray-400 mb-3 text-left"
-    >
-        그렇게 샀다면 비트코인 ₿{{ totalBtc }}개 보유 (현재가 약 ￦{{
-            formatKoreanCurrency(totalBtc * nowBitcoinPrice)
-        }})
+
+    <!-- 결과 요약 카드 -->
+    <div v-if="input > 0" class="mb-8">
+        <UCard>
+            <template #header>
+                <h3 class="text-lg font-semibold">💸 투자 결과</h3>
+            </template>
+            
+            <div class="space-y-4">
+                <!-- 투자 기간 및 금액 -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">투자 기간</div>
+                        <div class="text-2xl font-bold">{{ rows.length }}개월</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                        <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">총 투자금</div>
+                        <div class="text-2xl font-bold">{{ formatKoreanCurrency(totalInvestment) }}원</div>
+                    </div>
+                </div>
+
+                <!-- 보유 현황 -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mb-1">보유 비트코인</div>
+                    <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                        {{ parseFloat(totalBtc).toFixed(6) }} BTC
+                    </div>
+                </div>
+
+                <!-- 현재 평가액 -->
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mb-1">현재 평가액</div>
+                    <div class="text-3xl font-bold text-green-600 dark:text-green-400">
+                        {{ formatKoreanCurrency(currentValue) }}원
+                    </div>
+                </div>
+
+                <!-- 수익률 -->
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mb-1">총 수익금</div>
+                    <div class="text-3xl font-bold" :class="profit >= 0 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'">
+                        {{ profit >= 0 ? '+' : '' }}{{ formatKoreanCurrency(profit) }}원
+                    </div>
+                    <div class="text-lg font-semibold mt-1" :class="profit >= 0 ? 'text-red-500 dark:text-red-300' : 'text-blue-500 dark:text-blue-300'">
+                        ({{ profit >= 0 ? '+' : '' }}{{ profitRate }}%)
+                    </div>
+                </div>
+            </div>
+        </UCard>
     </div>
-    <UTable
-        v-if="input > 0"
-        v-model:sorting="sorting"
-        :columns="columns"
-        :data="rows"
-        class="mb-5 px-3 mx-auto"
-    >
-    </UTable>
-    <div v-else style="height: 300px" />
+
+    <!-- 테이블 -->
+    <div v-if="input > 0" class="mb-8">
+        <h3 class="text-lg font-semibold mb-4">📊 월별 투자 내역</h3>
+        <UTable
+            v-model:sorting="sorting"
+            :columns="columns"
+            :data="rows"
+            class="rounded-lg overflow-hidden"
+        />
+    </div>
+    
+    <div v-else class="text-center py-20 text-gray-400">
+        <p class="text-lg">💡 금액을 입력하면 결과를 확인할 수 있어요</p>
+    </div>
 </template>
