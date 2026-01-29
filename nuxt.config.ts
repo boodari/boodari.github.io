@@ -1,7 +1,11 @@
 import packageJson from "./package.json";
 
 export default defineNuxtConfig({
+    compatibilityVersion: 4,
     compatibilityDate: "2025-05-15",
+    future: {
+        compatibilityVersion: 4,
+    },
     runtimeConfig: {
         public: {
             version: packageJson.version,
