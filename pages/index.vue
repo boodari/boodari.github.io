@@ -268,7 +268,14 @@ onMounted(async () => {
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                         <div class="text-sm text-gray-500 dark:text-gray-400 mb-1">투자 기간</div>
-                        <div class="text-2xl font-bold">{{ validMonths }}개월</div>
+                        <div class="text-2xl font-bold">
+                            <template v-if="validMonths >= 12">
+                                {{ Math.floor(validMonths / 12) }}년 {{ validMonths % 12 }}개월
+                            </template>
+                            <template v-else>
+                                {{ validMonths }}개월
+                            </template>
+                        </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             (전체 {{ rows.length }}개월 중)
                         </div>
