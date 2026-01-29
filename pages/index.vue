@@ -149,7 +149,7 @@ const columns: TableColumn[] = [
     },
     {
         accessorKey: "dca",
-        header: "매달 투자",
+        header: "투자금액",
         cell: ({ row }) => {
             const rowData = row.original;
             return h('div', { class: 'flex items-center gap-2' }, [
@@ -362,7 +362,7 @@ onMounted(async () => {
                 💡 거래소가 없던 {{ rows.filter(row => row.krw === 0).length }}개월은 투자 불가능으로 제외됩니다
             </div>
             <div class="text-sm text-blue-600 dark:text-blue-400">
-                ✏️ '매달 투자' 열의 금액을 클릭하여 각 월별로 다른 금액을 설정할 수 있습니다
+                ✏️ '투자금액' 열의 금액을 클릭하여 각 월별로 다른 금액을 설정할 수 있습니다
             </div>
         </div>
         <UTable
