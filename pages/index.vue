@@ -269,47 +269,45 @@ onMounted(async () => {
         class="mb-8"
         help="기본 금액을 설정하고, 테이블에서 각 월별로 개별 수정도 가능합니다"
     >
-        <div class="space-y-4">
-            <UButtonGroup orientation="horizontal" class="flex-wrap gap-2">
-                <UButton
-                    color="neutral"
-                    variant="outline"
-                    label="+1만원"
-                    @click="input += 10000"
-                />
-                <UButton
-                    color="neutral"
-                    variant="outline"
-                    label="+10만원"
-                    @click="input += 100000"
-                />
-                <UButton
-                    color="neutral"
-                    variant="outline"
-                    label="+100만원"
-                    @click="input += 1000000"
-                />
-                <UButton
-                    color="neutral"
-                    variant="subtle"
-                    label="초기화"
-                    @click="() => { input = 0; customInvestments = {}; }"
-                />
-                <UButton
-                    v-if="input > 0"
-                    color="primary"
-                    variant="outline"
-                    label="전체 적용"
-                    @click="() => { customInvestments = {}; }"
-                />
-            </UButtonGroup>
-            
-            <UInput v-model="input" type="number" size="xl" placeholder="금액을 입력하세요">
-                <template #trailing>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">원</span>
-                </template>
-            </UInput>
-        </div>
+        <UButtonGroup orientation="horizontal" class="mb-3 flex-wrap gap-2">
+            <UButton
+                color="neutral"
+                variant="outline"
+                label="+1만원"
+                @click="input += 10000"
+            />
+            <UButton
+                color="neutral"
+                variant="outline"
+                label="+10만원"
+                @click="input += 100000"
+            />
+            <UButton
+                color="neutral"
+                variant="outline"
+                label="+100만원"
+                @click="input += 1000000"
+            />
+            <UButton
+                color="neutral"
+                variant="subtle"
+                label="초기화"
+                @click="() => { input = 0; customInvestments = {}; }"
+            />
+            <UButton
+                v-if="input > 0"
+                color="primary"
+                variant="outline"
+                label="전체 적용"
+                @click="() => { customInvestments = {}; }"
+            />
+        </UButtonGroup>
+        <br />
+        <UInput v-model="input" type="number" size="xl" placeholder="금액을 입력하세요">
+            <template #trailing>
+                <span class="text-xs text-gray-500 dark:text-gray-400">원</span>
+            </template>
+        </UInput>
     </UFormField>
 
     <!-- 결과 요약 카드 -->
