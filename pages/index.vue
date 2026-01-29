@@ -383,12 +383,14 @@ onMounted(async () => {
                 ✏️ '투자금액' 열의 금액을 클릭하여 각 월별로 다른 금액을 설정할 수 있습니다
             </div>
         </div>
-        <UTable
-            v-model:sorting="sorting"
-            :columns="columns"
-            :data="rows.filter(row => row.krw > 0)"
-            class="rounded-lg overflow-hidden"
-        />
+        <div class="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <UTable
+                v-model:sorting="sorting"
+                :columns="columns"
+                :data="rows.filter(row => row.krw > 0)"
+                class="rounded-lg overflow-hidden min-w-full"
+            />
+        </div>
     </div>
     
     <div v-else class="text-center py-20 text-gray-400">
