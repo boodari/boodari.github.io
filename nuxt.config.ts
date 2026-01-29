@@ -14,5 +14,8 @@ export default defineNuxtConfig({
     },
     devtools: { enabled: false },
     css: ["~/assets/css/main.css"],
-    modules: ["@nuxt/ui"],
+    modules: ["@nuxt/ui", "nuxt-gtag"],
+    gtag: {
+        id: "G-XXXXXXXXXX", // 여기에 실제 Google Analytics Measurement ID를 입력하세요
+    },
 });
