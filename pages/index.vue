@@ -55,29 +55,40 @@ const input = ref(0);
 // 현재 채굴된 비트코인 총량 (2024년 기준 약 1,970만 BTC)
 const MAX_BITCOIN_SUPPLY = 19700000;
 
+// 각 월별 커스텀 투자금액 저장 (date를 key로 사용)
+const customInvestments = ref<Record<string, number>>({});
+
 const rows = computed(() => {
     return bitcoinPrices
         .map((price: any) => {
+            // 커스텀 투자금액이 있으면 사용, 없으면 기본 input 값 사용
+            const investmentAmount = customInvestments.value[price.date] ?? input.value;
+            
             // 가격이 0인 경우는 거래 불가능으로 간주하여 0 반환
             if (price.krw === 0) {
                 return {
                     date: price.date,
                     krw: price.krw,
-                    dca: input.value,
+                    dca: investmentAmount,
                     btc: 0,
                 };
             }
             // 소수점 8자리까지 표시
-            const btc = (input.value / price.krw).toFixed(8);
+            const btc = (investmentAmount / price.krw).toFixed(8);
             return {
                 date: price.date,
                 krw: price.krw,
-                dca: input.value,
+                dca: investmentAmount,
                 btc,
             };
         })
         .slice(fromDateReverseStep.value);
 });
+
+// 투자금액 업데이트 함수
+const updateInvestment = (date: string, value: number) => {
+    customInvestments.value[date] = value;
+};
 
 const columns: TableColumn[] = [
     {
@@ -139,7 +150,22 @@ const columns: TableColumn[] = [
     {
         accessorKey: "dca",
         header: "매달 투자",
-        cell: ({ row }) => `${(row.getValue("dca") / 10000).toLocaleString()}만원`,
+        cell: ({ row }) => {
+            const rowData = row.original;
+            return h('div', { class: 'flex items-center gap-2' }, [
+                h('input', {
+                    type: 'number',
+                    value: rowData.dca,
+                    class: 'w-24 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary-500',
+                    onInput: (e: Event) => {
+                        const target = e.target as HTMLInputElement;
+                        const value = parseInt(target.value) || 0;
+                        updateInvestment(rowData.date, value);
+                    }
+                }),
+                h('span', { class: 'text-xs text-gray-500 dark:text-gray-400' }, '원')
+            ]);
+        },
     },
     {
         accessorKey: "btc",
@@ -174,7 +200,11 @@ const nowBitcoinPrice = ref(bitcoinPrices[bitcoinPrices.length - 1].krw);
 
 // 실제 투자 가능한 개월 수 (가격이 0이 아닌 월만 카운트)
 const validMonths = computed(() => rows.value.filter(row => row.krw > 0).length);
-const totalInvestment = computed(() => input.value * validMonths.value);
+const totalInvestment = computed(() => {
+    return rows.value
+        .filter(row => row.krw > 0)
+        .reduce((acc, row) => acc + row.dca, 0);
+});
 
 const currentValue = computed(() => totalBtc.value * nowBitcoinPrice.value);
 const profit = computed(() => currentValue.value - totalInvestment.value);
@@ -221,6 +251,7 @@ onMounted(async () => {
     <UFormField
         label="💰 매달 얼마씩 투자할껄?"
         class="mb-8"
+        help="기본 금액을 설정하고, 테이블에서 각 월별로 개별 수정도 가능합니다"
     >
         <UButtonGroup orientation="horizontal" class="mb-3 flex-wrap gap-2">
             <UButton
@@ -245,7 +276,14 @@ onMounted(async () => {
                 color="neutral"
                 variant="subtle"
                 label="초기화"
-                @click="input = 0"
+                @click="() => { input = 0; customInvestments = {}; }"
+            />
+            <UButton
+                v-if="input > 0"
+                color="primary"
+                variant="outline"
+                label="전체 적용"
+                @click="() => { customInvestments = {}; }"
             />
         </UButtonGroup>
         <br />
@@ -319,8 +357,13 @@ onMounted(async () => {
     <!-- 테이블 -->
     <div v-if="input > 0" class="mb-8">
         <h3 class="text-lg font-semibold mb-4">📊 월별 투자 내역</h3>
-        <div v-if="rows.filter(row => row.krw === 0).length > 0" class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            💡 거래소가 없던 {{ rows.filter(row => row.krw === 0).length }}개월은 투자 불가능으로 제외됩니다
+        <div class="space-y-2 mb-3">
+            <div v-if="rows.filter(row => row.krw === 0).length > 0" class="text-sm text-gray-500 dark:text-gray-400">
+                💡 거래소가 없던 {{ rows.filter(row => row.krw === 0).length }}개월은 투자 불가능으로 제외됩니다
+            </div>
+            <div class="text-sm text-blue-600 dark:text-blue-400">
+                ✏️ '매달 투자' 열의 금액을 클릭하여 각 월별로 다른 금액을 설정할 수 있습니다
+            </div>
         </div>
         <UTable
             v-model:sorting="sorting"
